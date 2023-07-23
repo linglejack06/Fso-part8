@@ -1,7 +1,9 @@
+/* eslint-disable import/no-extraneous-dependencies */
 const { ApolloServer } = require("@apollo/server");
 const { startStandaloneServer } = require("@apollo/server/standalone");
+const { v1: uuid } = require("uuid");
 
-const authors = [
+let authors = [
   {
     name: "Robert Martin",
     id: "afa51ab0-344d-11e9-a414-719c6709cf3e",
@@ -89,7 +91,7 @@ const typeDefs = `
   }
   type Author {
     name: String!
-    born: Int!
+    born: Int
     id: ID!
     bookCount: Int!
   }
@@ -98,6 +100,18 @@ const typeDefs = `
     authorCount: Int!
     allBooks(author: String, genre: String): [Book!]!
     allAuthors: [Author!]!
+  }
+  type Mutation {
+    addBook(
+      title: String!
+      author: String!
+      published: Int!
+      genres: [String]!
+    ): Book
+    editAuthor(
+      name: String!
+      born: Int!
+    ): Author
   }
 `;
 
@@ -135,6 +149,29 @@ const resolvers = {
       console.log(root);
       const authorBooks = books.filter((book) => book.author === root.name);
       return authorBooks.length;
+    },
+  },
+  Mutation: {
+    addBook: (root, args) => {
+      if (!authors.find((author) => author.name === args.author)) {
+        authors.concat({
+          name: args.author,
+          id: uuid(),
+        });
+      }
+      const book = { ...args, id: uuid() };
+      books.concat(book);
+      return book;
+    },
+    editAuthor: (root, args) => {
+      const author = authors.find((a) => a.name === args.name);
+      if (!author) return null;
+      const updatedAuthor = {
+        ...author,
+        born: args.born,
+      };
+      authors = authors.map((a) => (a.name === args.name ? updatedAuthor : a));
+      return updatedAuthor;
     },
   },
 };
