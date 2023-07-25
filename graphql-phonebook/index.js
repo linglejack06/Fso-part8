@@ -1,10 +1,27 @@
+/* eslint-disable import/no-extraneous-dependencies */
 const { ApolloServer } = require("@apollo/server");
 const { startStandaloneServer } = require("@apollo/server/standalone");
 const { GraphQLError } = require("graphql");
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { v1: uuid } = require("uuid");
+const mongoose = require("mongoose");
+const Person = require("./models/person");
 
-let persons = [
+mongoose.set("strictQuery", false);
+
+require("dotenv").config();
+
+const { MONGODB_URI } = process.env;
+mongoose
+  .connect(MONGODB_URI)
+  .then(() => {
+    console.log("connected to database");
+  })
+  .catch((error) => {
+    console.error(`Error connecting to database: ${error.message}`);
+  });
+
+const persons = [
   {
     name: "Arto Hellas",
     phone: "040-123543",
@@ -63,17 +80,14 @@ const typeDefs = `
 
 const resolvers = {
   Query: {
-    personCount: () => persons.length,
+    personCount: async () => Person.collection.length,
     allPersons: (root, args) => {
       if (!args.phone) {
-        return persons;
+        return Person.find({});
       }
-      const byPhone = (person) =>
-        args.phone === "YES" ? person.phone : !person.phone;
-      return persons.filter(byPhone);
+      return Person.find({ phone: { $exists: args.phone === "YES" } });
     },
-    findPerson: (root, args) =>
-      persons.find((person) => person.name === args.name),
+    findPerson: async (root, args) => Person.findOne({ name: args.name }),
   },
   Person: {
     address: (root) => ({
@@ -82,30 +96,39 @@ const resolvers = {
     }),
   },
   Mutation: {
-    addPerson: (root, args) => {
-      if (persons.find((person) => person.name === args.name)) {
-        throw new GraphQLError("name must be unique", {
+    addPerson: async (root, args) => {
+      const person = new Person({ ...args });
+      try {
+        await person.save();
+      } catch (error) {
+        throw new GraphQLError("Saving person failed", {
           extensions: {
             code: "BAD_USER_INPUT",
             invalidArgs: args.name,
+            error,
           },
         });
       }
-      const person = { ...args, id: uuid() };
-      persons = persons.concat(person);
       return person;
     },
-    editNumber: (root, args) => {
-      const person = persons.find((p) => p.name === args.name);
+    editNumber: async (root, args) => {
+      const person = await Person.findOne({ name: args.name });
       if (!person) {
         return null;
       }
-      const updatedPerson = {
-        ...person,
-        phone: args.phone,
-      };
-      persons = persons.map((p) => (p.name === args.name ? updatedPerson : p));
-      return updatedPerson;
+      person.phone = args.phone;
+      try {
+        await person.save();
+      } catch (error) {
+        throw new GraphQLError("Saving number failed", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+            invalidArgs: args.name,
+            error,
+          },
+        });
+      }
+      return person.save();
     },
   },
 };
