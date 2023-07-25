@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import NavBar from "./components/NavBar";
 import Authors from "./components/Authors";
+import Books from "./components/Books";
 
 const App = () => {
   return (
@@ -8,7 +9,7 @@ const App = () => {
       <NavBar />
       <Routes>
         <Route path="/" element={<Authors />} />
-        {/* <Route path="/books" element={<Books />} /> */}
+        <Route path="/books" element={<Books />} />
       </Routes>
     </div>
   );
