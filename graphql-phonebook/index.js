@@ -3,7 +3,6 @@ const { ApolloServer } = require("@apollo/server");
 const { startStandaloneServer } = require("@apollo/server/standalone");
 const { GraphQLError } = require("graphql");
 // eslint-disable-next-line import/no-extraneous-dependencies
-const { v1: uuid } = require("uuid");
 const mongoose = require("mongoose");
 const Person = require("./models/person");
 
@@ -58,7 +57,7 @@ const typeDefs = `
 const resolvers = {
   Query: {
     personCount: async () => Person.collection.length,
-    allPersons: (root, args) => {
+    allPersons: async (root, args) => {
       if (!args.phone) {
         return Person.find({});
       }
