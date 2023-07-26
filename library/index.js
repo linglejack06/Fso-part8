@@ -55,34 +55,24 @@ const resolvers = {
     authorCount: () =>
       Author.collection.length ? Author.collection.length : 0,
     allBooks: async (root, args) => {
-      // if (args.author && args.genre) {
-      //   const authorBooks = books.filter((book) => book.author === args.author);
-      //   return authorBooks.filter((book) => {
-      //     if (book.genres.find((genre) => genre === args.genre)) {
-      //       return true;
-      //     }
-      //     return false;
-      //   });
-      // }
-      // if (args.author) {
-      //   return books.filter((book) => book.author === args.author);
-      // }
-      // if (args.genre) {
-      //   return books.filter((book) => {
-      //     if (book.genres.find((genre) => genre === args.genre)) {
-      //       return true;
-      //     }
-      //     return false;
-      //   });
-      // }
-      try {
-        const books = await Book.find({}).populate("author");
-        return books;
-      } catch (error) {
-        throw new GraphQLError("Error loading books", {
-          error,
+      const books = await Book.find({});
+      if (args.author && args.genre) {
+        const authorBooks = books.filter((book) => book.author === args.author);
+        return authorBooks.filter((book) => {
+          if (book.genres.find((genre) => genre === args.genre)) {
+            return true;
+          }
+          return false;
         });
       }
+      if (args.author) {
+        return books.filter((book) => book.author === args.author);
+      }
+      if (args.genre) {
+        const genreBooks = Book.find({ genres: args.genre });
+        return genreBooks;
+      }
+      return books;
     },
     allAuthors: async () => {
       try {
@@ -105,22 +95,27 @@ const resolvers = {
   Mutation: {
     addBook: async (root, args) => {
       const author = Author.find({ name: args.author });
-      const book = new Book({
-        title: args.title,
-        published: args.published,
-        genres: args.genres,
-      });
+      let book;
       if (!author) {
         const newAuthor = new Author({ name: args.author, born: null });
         await newAuthor.save();
-        book.author = newAuthor._id;
+        book = new Book({
+          title: args.title,
+          published: args.published,
+          genres: args.genres,
+          author: newAuthor._id,
+        });
       } else {
-        book.author = author._id;
+        book = new Book({
+          title: args.title,
+          published: args.published,
+          genres: args.genres,
+          author: author._id,
+        });
       }
       try {
         await book.save();
-        const populatedBook = book.populate("Author");
-        return populatedBook;
+        return book;
       } catch (error) {
         console.error(error);
         throw new GraphQLError("Error saving book", {
