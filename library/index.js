@@ -4,8 +4,10 @@ const { ApolloServer } = require("@apollo/server");
 const { startStandaloneServer } = require("@apollo/server/standalone");
 const mongoose = require("mongoose");
 const { GraphQLError } = require("graphql");
+const jwt = require("jsonwebtoken");
 const Book = require("./models/book");
 const Author = require("./models/author");
+const User = require("./models/user");
 require("dotenv").config();
 
 const { MONGODB_URI } = process.env;
@@ -29,11 +31,20 @@ const typeDefs = `
     id: ID!
     bookCount: Int!
   }
+  type User {
+    username: String!
+    favoriteGenre: String!
+    id: ID!
+  }
+  type Token {
+    value: String!
+  }
   type Query {
     bookCount: Int!
     authorCount: Int!
     allBooks(author: String, genre: String): [Book!]!
     allAuthors: [Author!]!
+    me: User
   }
   type Mutation {
     addBook(
@@ -46,6 +57,14 @@ const typeDefs = `
       name: String!
       born: Int!
     ): Author
+    createUser(
+      username: String!
+      favoriteGenre: String!
+    ): User
+    login(
+      username: String!
+      password: String!
+    ): Token
   }
 `;
 
@@ -93,7 +112,12 @@ const resolvers = {
     // },
   },
   Mutation: {
-    addBook: async (root, args) => {
+    addBook: async (root, args, { currentUser }) => {
+      if (!currentUser) {
+        throw new GraphQLError("Authentication not found", {
+          extensions: {},
+        });
+      }
       const author = Author.find({ name: args.author });
       let book;
       if (!author) {
@@ -123,16 +147,51 @@ const resolvers = {
         });
       }
     },
-    // editAuthor: (root, args) => {
-    //   const author = authors.find((a) => a.name === args.name);
-    //   if (!author) return null;
-    //   const updatedAuthor = {
-    //     ...author,
-    //     born: args.born,
-    //   };
-    //   authors = authors.map((a) => (a.name === args.name ? updatedAuthor : a));
-    //   return updatedAuthor;
-    // },
+    editAuthor: async (root, args, { currentUser }) => {
+      if (!currentUser) {
+        throw new GraphQLError("Authentication not found", {
+          extensions: {},
+        });
+      }
+      const author = Author.find({ name: args.name });
+      if (!author) return null;
+      author.born = args.born;
+      try {
+        await author.save();
+        return author;
+      } catch (error) {
+        throw new GraphQLError("Error saving author", {
+          extensions: { error },
+        });
+      }
+    },
+    createUser: async (root, args) => {
+      const user = new User({ ...args });
+      try {
+        await user.save();
+      } catch (error) {
+        throw new GraphQLError("Error creating user", {
+          extensions: { error },
+        });
+      }
+    },
+    login: async (root, args) => {
+      const user = await User.findOne({ username: args.username });
+      if (!user || args.password !== "library") {
+        throw new GraphQLError("Incorrect credentials", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+          },
+        });
+      }
+      const userForToken = {
+        username: user.username,
+        id: user._id,
+      };
+
+      const token = jwt.sign(userForToken, "library");
+      return { value: token };
+    },
   },
 };
 
@@ -140,6 +199,15 @@ const server = new ApolloServer({ typeDefs, resolvers });
 
 startStandaloneServer(server, {
   listen: { port: 4000 },
+  context: async ({ req }) => {
+    const auth = req ? req.headers.authorization : null;
+    if (auth && auth.startsWith("Bearer ")) {
+      const decodedToken = jwt.verify(auth.substring(7), "library");
+      const currentUser = User.findById(decodedToken.id);
+      return { currentUser };
+    }
+    return null;
+  },
 }).then(({ url }) => {
   console.log(url);
 });
