@@ -91,7 +91,9 @@ const resolvers = {
         const genreBooks = Book.find({ genres: args.genre });
         return genreBooks;
       }
-      return books;
+      const populatedBooks = await Book.find({}).populate("author");
+      console.log(populatedBooks);
+      return populatedBooks;
     },
     allAuthors: async () => {
       try {
@@ -111,6 +113,14 @@ const resolvers = {
     //   return authorBooks.length;
     // },
   },
+  Book: {
+    author: async (root) => {
+      const populatedBook = await Book.find({ title: root.title }).populate(
+        "author"
+      );
+      return populatedBook.author;
+    },
+  },
   Mutation: {
     addBook: async (root, args, { currentUser }) => {
       if (!currentUser) {
@@ -118,9 +128,10 @@ const resolvers = {
           extensions: {},
         });
       }
-      const author = Author.find({ name: args.author });
+      const author = await Author.find({ name: args.author });
+      console.log(author);
       let book;
-      if (!author) {
+      if (author.length === 0) {
         const newAuthor = new Author({ name: args.author, born: null });
         await newAuthor.save();
         book = new Book({
@@ -139,7 +150,11 @@ const resolvers = {
       }
       try {
         await book.save();
-        return book;
+        const populatedBook = await Book.find({ title: book.title }).populate(
+          "author"
+        );
+        console.log(populatedBook);
+        return populatedBook;
       } catch (error) {
         console.error(error);
         throw new GraphQLError("Error saving book", {
@@ -189,7 +204,7 @@ const resolvers = {
         id: user._id,
       };
 
-      const token = jwt.sign(userForToken, "library");
+      const token = jwt.sign(userForToken, "secret");
       return { value: token };
     },
   },
@@ -202,12 +217,13 @@ startStandaloneServer(server, {
   context: async ({ req }) => {
     const auth = req ? req.headers.authorization : null;
     if (auth && auth.startsWith("Bearer ")) {
-      const decodedToken = jwt.verify(auth.substring(7), "library");
+      const decodedToken = jwt.verify(auth.substring(7), "secret");
       const currentUser = User.findById(decodedToken.id);
       return { currentUser };
     }
     return null;
   },
+  introspection: true,
 }).then(({ url }) => {
   console.log(url);
 });
