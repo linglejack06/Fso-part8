@@ -91,9 +91,10 @@ const resolvers = {
         const genreBooks = Book.find({ genres: args.genre });
         return genreBooks;
       }
-      const populatedBooks = await Book.find({}).populate("author");
-      console.log(populatedBooks);
-      return populatedBooks;
+      return books;
+      // const populatedBooks = await Book.find({}).populate("author");
+      // console.log(populatedBooks);
+      // return populatedBooks;
     },
     allAuthors: async () => {
       try {
@@ -115,7 +116,7 @@ const resolvers = {
   },
   Book: {
     author: async (root) => {
-      const populatedBook = await Book.find({ title: root.title }).populate(
+      const populatedBook = await Book.findOne({ title: root.title }).populate(
         "author"
       );
       return populatedBook.author;
@@ -128,10 +129,9 @@ const resolvers = {
           extensions: {},
         });
       }
-      const author = await Author.find({ name: args.author });
-      console.log(author);
+      const author = await Author.findOne({ name: args.author });
       let book;
-      if (author.length === 0) {
+      if (!author) {
         const newAuthor = new Author({ name: args.author, born: null });
         await newAuthor.save();
         book = new Book({
@@ -150,11 +150,7 @@ const resolvers = {
       }
       try {
         await book.save();
-        const populatedBook = await Book.find({ title: book.title }).populate(
-          "author"
-        );
-        console.log(populatedBook);
-        return populatedBook;
+        return book;
       } catch (error) {
         console.error(error);
         throw new GraphQLError("Error saving book", {
