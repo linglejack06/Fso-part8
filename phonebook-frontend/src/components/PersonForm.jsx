@@ -15,6 +15,13 @@ function PersonForm({ setError }) {
       const messages = error.graphQLErrors[0].message;
       setError(messages);
     },
+    update: (cache, response) => {
+      cache.updateQuery({ query: ALL_PERSONS }, ({ allPersons }) => {
+        return {
+          allPersons: allPersons.concat(response.data.addPerson),
+        };
+      });
+    },
   });
 
   const handleSubmit = (e) => {
