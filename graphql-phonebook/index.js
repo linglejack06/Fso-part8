@@ -125,6 +125,7 @@ const resolvers = {
         currentUser.friends = [...currentUser.friends, person];
         await currentUser.save();
       } catch (error) {
+        console.error(error);
         throw new GraphQLError("Saving person failed", {
           extensions: {
             code: "BAD_USER_INPUT",
