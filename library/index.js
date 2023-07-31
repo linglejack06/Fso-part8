@@ -135,26 +135,30 @@ const resolvers = {
           extensions: {},
         });
       }
-      const author = await Author.findOne({ name: args.author });
-      let book;
-      if (!author) {
-        const newAuthor = new Author({ name: args.author, born: null });
-        await newAuthor.save();
-        book = new Book({
-          title: args.title,
-          published: args.published,
-          genres: args.genres,
-          author: newAuthor._id,
-        });
-      } else {
-        book = new Book({
-          title: args.title,
-          published: args.published,
-          genres: args.genres,
-          author: author._id,
-        });
-      }
       try {
+        const author = await Author.findOne({ name: args.author });
+        let book;
+        if (!author) {
+          const newAuthor = new Author({
+            name: args.author,
+            born: null,
+            bookCount: 0,
+          });
+          await newAuthor.save();
+          book = new Book({
+            title: args.title,
+            published: args.published,
+            genres: args.genres,
+            author: newAuthor._id,
+          });
+        } else {
+          book = new Book({
+            title: args.title,
+            published: args.published,
+            genres: args.genres,
+            author: author._id,
+          });
+        }
         await book.save();
         return book;
       } catch (error) {
@@ -186,7 +190,9 @@ const resolvers = {
       const user = new User({ ...args });
       try {
         await user.save();
+        return user;
       } catch (error) {
+        console.error(error);
         throw new GraphQLError("Error creating user", {
           extensions: { error },
         });
@@ -207,6 +213,7 @@ const resolvers = {
       };
 
       const token = jwt.sign(userForToken, "secret");
+      console.log(token);
       return { value: token };
     },
   },
@@ -219,6 +226,7 @@ startStandaloneServer(server, {
   context: async ({ req }) => {
     const auth = req ? req.headers.authorization : null;
     if (auth && auth.startsWith("Bearer ")) {
+      console.log(auth, auth.substring(7));
       const decodedToken = jwt.verify(auth.substring(7), "secret");
       const currentUser = User.findById(decodedToken.id);
       return { currentUser };
