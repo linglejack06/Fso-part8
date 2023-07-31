@@ -74,22 +74,30 @@ const resolvers = {
     authorCount: () =>
       Author.collection.length ? Author.collection.length : 0,
     allBooks: async (root, args) => {
-      if (args.author && args.genre) {
-        const books = await Book.find({ genres: args.genre }).populate(
-          "author"
-        );
-        return books.filter((book) => book.author.name === args.author);
+      try {
+        if (args.author && args.genre) {
+          const books = await Book.find({ genres: args.genre }).populate(
+            "author"
+          );
+          return books.filter((book) => book.author.name === args.author);
+        }
+        if (args.author) {
+          const books = await Book.find({}).populate("author");
+          return books.filter((book) => book.author.name === args.author);
+        }
+        if (args.genre) {
+          const genreBooks = Book.find({ genres: args.genre });
+          return genreBooks;
+        }
+        const books = await Book.find({});
+        console.log(books);
+        return books;
+      } catch (error) {
+        console.error(error.message);
+        throw new GraphQLError("Error fetching books", {
+          error,
+        });
       }
-      if (args.author) {
-        const books = await Book.find({}).populate("author");
-        return books.filter((book) => book.author.name === args.author);
-      }
-      if (args.genre) {
-        const genreBooks = Book.find({ genres: args.genre });
-        return genreBooks;
-      }
-      const books = await Book.find({});
-      return books;
     },
     allAuthors: async () => {
       try {
@@ -103,11 +111,14 @@ const resolvers = {
     },
   },
   Author: {
-    // bookCount: (root) => {
-    //   console.log(root);
-    //   const authorBooks = books.filter((book) => book.author === root.name);
-    //   return authorBooks.length;
-    // },
+    bookCount: async (root) => {
+      console.log(root);
+      const books = await Book.find({}).populate("author");
+      const authorBooks = books.filter(
+        (book) => book.author.name === root.name
+      );
+      return authorBooks.length;
+    },
   },
   Book: {
     author: async (root) => {
