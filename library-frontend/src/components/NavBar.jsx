@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
-import { useTokenValue } from "../contexts/tokenContext";
 
-const NavBar = () => {
-  const token = useTokenValue();
+const NavBar = ({ token }) => {
   return (
     <nav>
       <Link to="/">Authors</Link>

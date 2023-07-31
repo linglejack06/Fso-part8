@@ -11,7 +11,10 @@ const BookForm = () => {
   const [genre, setGenre] = useState("");
   const [genres, setGenres] = useState([]);
   const [addNewBook, result] = useMutation(ADD_NEW_BOOK, {
-    refetchQueries: [{ query: ALL_BOOKS }, { query: ALL_AUTHORS }],
+    onError: (error) => {
+      console.error(error);
+    },
+    refetchQueries: [{ query: ALL_AUTHORS }, { query: ALL_BOOKS }],
   });
   const handleSubmit = (e) => {
     e.preventDefault();
