@@ -88,6 +88,7 @@ const resolvers = {
         const genreBooks = Book.find({ genres: args.genre });
         return genreBooks;
       }
+      const books = await Book.find({});
       return books;
     },
     allAuthors: async () => {
