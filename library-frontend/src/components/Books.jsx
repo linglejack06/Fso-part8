@@ -4,7 +4,7 @@ import { ALL_BOOKS } from "../queries";
 const Book = ({ book }) => (
   <tr>
     <td>{book.title}</td>
-    <td>{book.author}</td>
+    <td>{book.author.name}</td>
     <td>{book.published}</td>
   </tr>
 );
@@ -13,6 +13,7 @@ const Books = () => {
   if (result.loading) {
     return <div>Loading...</div>;
   }
+  console.log(result);
   const books = result.data.allBooks;
   return (
     <div>
