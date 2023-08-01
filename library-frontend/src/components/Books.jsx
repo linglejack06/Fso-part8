@@ -1,5 +1,6 @@
 import { useQuery } from "@apollo/client";
-import { ALL_BOOKS } from "../queries";
+import { ALL_BOOKS, ALL_BOOKS_FILTERED_GENRE } from "../queries";
+import { useState } from "react";
 
 const Book = ({ book }) => (
   <tr>
@@ -9,12 +10,27 @@ const Book = ({ book }) => (
   </tr>
 );
 const Books = () => {
-  const result = useQuery(ALL_BOOKS);
+  const [genreSelection, setGenreSelection] = useState(null);
+  const result = useQuery(
+    genreSelection ? ALL_BOOKS_FILTERED_GENRE : ALL_BOOKS,
+    {
+      variables: genreSelection ? { genre: genreSelection } : {},
+    }
+  );
+  const handleClick = (e) => {
+    setGenreSelection(e.target.name);
+  };
+  const handleAllClick = () => {
+    setGenreSelection(null);
+  };
   if (result.loading) {
     return <div>Loading...</div>;
   }
-  console.log(result);
   const books = result.data.allBooks;
+  // flattens nested array of genres
+  const differentGenres = [].concat(...books.map((book) => book.genres));
+  // removes duplicates
+  const filteredGenres = [...new Set(differentGenres)];
   return (
     <div>
       <h2>Books</h2>
@@ -32,6 +48,14 @@ const Books = () => {
           ))}
         </tbody>
       </table>
+      <ul>
+        {filteredGenres.map((genre) => (
+          <button name={genre} onClick={handleClick} key={genre}>
+            {genre}
+          </button>
+        ))}
+        <button onClick={handleAllClick}>Remove Filter</button>
+      </ul>
     </div>
   );
 };
