@@ -13,13 +13,17 @@ const LoginForm = ({ setToken }) => {
   });
   useEffect(() => {
     if (response.data) {
+      console.log("Working");
       setToken(response.data.login.value);
       localStorage.setItem("logged-user", response.data.login.value);
     }
   }, [response.data]);
   const handleSubmit = async (e) => {
     e.preventDefault();
-    login({ variables: { username, password } });
+    await login({ variables: { username, password } });
+    console.log(response);
+    setUsername("");
+    setPassword("");
   };
   const handleChange = (e) => {
     switch (e.target.name) {

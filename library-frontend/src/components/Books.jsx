@@ -1,14 +1,8 @@
 import { useQuery } from "@apollo/client";
 import { ALL_BOOKS, ALL_BOOKS_FILTERED_GENRE } from "../queries";
 import { useState } from "react";
+import Book from "./Book";
 
-const Book = ({ book }) => (
-  <tr>
-    <td>{book.title}</td>
-    <td>{book.author.name}</td>
-    <td>{book.published}</td>
-  </tr>
-);
 const Books = () => {
   const [genreSelection, setGenreSelection] = useState(null);
   const result = useQuery(
