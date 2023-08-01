@@ -109,6 +109,10 @@ const resolvers = {
         });
       }
     },
+    me: (root, args, { currentUser }) => {
+      console.log(currentUser.favoriteGenre);
+      return currentUser;
+    },
   },
   Author: {
     bookCount: async (root) => {
@@ -228,7 +232,7 @@ startStandaloneServer(server, {
     if (auth && auth.startsWith("Bearer ")) {
       console.log(auth, auth.substring(7));
       const decodedToken = jwt.verify(auth.substring(7), "secret");
-      const currentUser = User.findById(decodedToken.id);
+      const currentUser = await User.findById(decodedToken.id);
       return { currentUser };
     }
     return null;
