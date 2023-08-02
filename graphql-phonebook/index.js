@@ -2,7 +2,6 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable import/no-extraneous-dependencies */
 const { ApolloServer } = require("@apollo/server");
-const { startStandaloneServer } = require("@apollo/server/standalone");
 const { expressMiddleware } = require("@apollo/server/express4");
 const {
   ApolloServerPluginDrainHttpServer,
@@ -14,7 +13,6 @@ const http = require("http");
 // eslint-disable-next-line import/no-extraneous-dependencies
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
-const Person = require("./models/person");
 const User = require("./models/user");
 const typeDefs = require("./schema");
 const resolvers = require("./resolvers");
