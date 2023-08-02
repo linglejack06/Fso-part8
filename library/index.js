@@ -3,7 +3,7 @@
 const { ApolloServer } = require("@apollo/server");
 const { expressMiddleware } = require("@apollo/server/express4");
 const {
-  ApolloServerPLuginDrainHttpServer,
+  ApolloServerPluginDrainHttpServer,
 } = require("@apollo/server/plugin/drainHttpServer");
 const cors = require("cors");
 const { useServer } = require("graphql-ws/lib/use/ws");
@@ -19,7 +19,7 @@ const { authorTypeDef, authorResolvers } = require("./schemas/authorSchema");
 const { userTypeDef, userResolvers } = require("./schemas/userSchema");
 const tokenTypeDef = require("./schemas/tokenSchema");
 const { bookTypeDef, bookResolvers } = require("./schemas/bookSchema");
-const mutations = require("./mutations");
+const { mutationResolver, mutationTypeDef } = require("./mutations");
 require("dotenv").config();
 
 const { MONGODB_URI } = process.env;
@@ -31,20 +31,36 @@ mongoose
 
 const start = async () => {
   const app = express();
+  const Query = `
+  type Query {
+    _empty: String
+  }`;
   const httpServer = createServer(app);
   const wsServer = new WebSocketServer({
     server: httpServer,
     path: "/",
   });
   const schema = makeExecutableSchema({
-    typeDefs: [authorTypeDef, bookTypeDef, tokenTypeDef, userTypeDef],
-    resolvers: merge(authorResolvers, bookResolvers, userResolvers, mutations),
+    typeDefs: [
+      Query,
+      authorTypeDef,
+      bookTypeDef,
+      tokenTypeDef,
+      userTypeDef,
+      mutationTypeDef,
+    ],
+    resolvers: merge(
+      authorResolvers,
+      bookResolvers,
+      userResolvers,
+      mutationResolver
+    ),
   });
   const serverCleanup = useServer({ schema }, wsServer);
   const server = new ApolloServer({
     schema,
     plugins: [
-      ApolloServerPLuginDrainHttpServer({ httpServer }),
+      ApolloServerPluginDrainHttpServer({ httpServer }),
       {
         async serverWillStart() {
           return {

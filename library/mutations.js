@@ -5,7 +5,29 @@ const User = require("./models/user");
 const Author = require("./models/author");
 const Book = require("./models/book");
 
-const mutations = {
+const mutationTypeDef = `
+  type Mutation {
+    addBook(
+      title: String!
+      author: String!
+      published: Int!
+      genres: [String!]!
+    ): Book
+    editAuthor(
+      name: String!
+      born: Int!
+    ): Author
+    createUser(
+      username: String!
+      favoriteGenre: String!
+    ): User
+    login(
+      username: String!
+      password: String!
+    ): Token
+  }
+`;
+const mutationResolver = {
   Mutation: {
     addBook: async (root, args, { currentUser }) => {
       if (!currentUser) {
@@ -97,4 +119,4 @@ const mutations = {
   },
 };
 
-module.exports = mutations;
+module.exports = { mutationResolver, mutationTypeDef };
