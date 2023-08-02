@@ -20,6 +20,10 @@ const { userTypeDef, userResolvers } = require("./schemas/userSchema");
 const tokenTypeDef = require("./schemas/tokenSchema");
 const { bookTypeDef, bookResolvers } = require("./schemas/bookSchema");
 const { mutationResolver, mutationTypeDef } = require("./mutations");
+const {
+  subscriptionResolvers,
+  subscriptionTypeDefs,
+} = require("./subscriptions");
 require("dotenv").config();
 
 const { MONGODB_URI } = process.env;
@@ -48,12 +52,14 @@ const start = async () => {
       tokenTypeDef,
       userTypeDef,
       mutationTypeDef,
+      subscriptionTypeDefs,
     ],
     resolvers: merge(
       authorResolvers,
       bookResolvers,
       userResolvers,
-      mutationResolver
+      mutationResolver,
+      subscriptionResolvers
     ),
   });
   const serverCleanup = useServer({ schema }, wsServer);

@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const User = require("./models/user");
 const Author = require("./models/author");
 const Book = require("./models/book");
+const { pubsub } = require("./subscriptions");
 
 const mutationTypeDef = `
   type Mutation {
@@ -60,6 +61,7 @@ const mutationResolver = {
           });
         }
         await book.save();
+        pubsub.publish("BOOK_ADDED", { bookAdded: book });
         return book;
       } catch (error) {
         console.error(error);
@@ -113,7 +115,6 @@ const mutationResolver = {
       };
 
       const token = jwt.sign(userForToken, "secret");
-      console.log(token);
       return { value: token };
     },
   },
