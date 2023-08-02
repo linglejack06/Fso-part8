@@ -10,6 +10,8 @@ const { makeExecutableSchema } = require("@graphql-tools/schema");
 const express = require("express");
 const cors = require("cors");
 const http = require("http");
+const { WebSocketServer } = require("ws");
+const { useServer } = require("graphql-ws/lib/use/ws");
 // eslint-disable-next-line import/no-extraneous-dependencies
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
@@ -34,10 +36,26 @@ mongoose
 const start = async () => {
   const app = express();
   const httpServer = http.createServer(app);
-
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: "/",
+  });
+  const schema = makeExecutableSchema({ typeDefs, resolvers });
+  const serverCleanup = useServer({ schema }, wsServer);
   const server = new ApolloServer({
-    schema: makeExecutableSchema({ typeDefs, resolvers }),
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    schema,
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await serverCleanup.dispose();
+            },
+          };
+        },
+      },
+    ],
   });
 
   await server.start();
