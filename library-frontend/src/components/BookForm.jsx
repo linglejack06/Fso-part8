@@ -10,7 +10,7 @@ const BookForm = () => {
   const [published, setPublished] = useState(1999);
   const [genre, setGenre] = useState("");
   const [genres, setGenres] = useState([]);
-  const [addNewBook, result] = useMutation(ADD_NEW_BOOK, {
+  const [addNewBook] = useMutation(ADD_NEW_BOOK, {
     onError: (error) => {
       console.error(error);
     },
@@ -18,8 +18,9 @@ const BookForm = () => {
   });
   const handleSubmit = (e) => {
     e.preventDefault();
-    addNewBook({ variables: { title, author, published, genres } });
-    console.log(result.data);
+    addNewBook({
+      variables: { title, author, published: parseInt(published, 10), genres },
+    });
     navigate("/books");
   };
   const handleChange = (e) => {

@@ -7,14 +7,26 @@ import BirthForm from "./components/BirthForm";
 import LoginForm from "./components/LoginForm";
 import RecommendedBooks from "./components/RecommendedBooks";
 import { useState } from "react";
-import { useQuery } from "@apollo/client";
-import { CURRENT_USER } from "./queries";
+import { useQuery, useSubscription, useApolloClient } from "@apollo/client";
+import { ALL_BOOKS, BOOK_ADDED, CURRENT_USER } from "./queries";
 
 const App = () => {
   const [token, setToken] = useState(null);
   const result = useQuery(CURRENT_USER);
+  const client = useApolloClient();
+  useSubscription(BOOK_ADDED, {
+    onData: ({ data }) => {
+      console.log(data);
+      window.alert(`Added book ${data.data.bookAdded.title}`);
+      client.cache.updateQuery({ query: ALL_BOOKS }, ({ allBooks }) => {
+        return {
+          allBooks: allBooks.concat(data.data.bookAdded),
+        };
+      });
+    },
+  });
   if (result.loading) return "Loading";
-  const user = result.data.me;
+  console.log(result);
   return (
     <div>
       <NavBar token={token} />
@@ -24,10 +36,12 @@ const App = () => {
         <Route path="/add-book" element={<BookForm />} />
         <Route path="/edit-birth" element={<BirthForm />} />
         <Route path="/login" element={<LoginForm setToken={setToken} />} />
-        <Route
-          path="/recommendations"
-          element={<RecommendedBooks user={user} />}
-        />
+        {token ? (
+          <Route
+            path="/recommendations"
+            element={<RecommendedBooks user={result.data.me} />}
+          />
+        ) : null}
       </Routes>
     </div>
   );
