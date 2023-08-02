@@ -97,4 +97,4 @@ const mutations = {
   },
 };
 
-export default mutations;
+module.exports = mutations;
