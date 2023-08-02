@@ -4,4 +4,4 @@ type Token {
 }
 `;
 
-export default tokenTypeDef;
+module.exports = tokenTypeDef;

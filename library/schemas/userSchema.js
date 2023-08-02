@@ -1,4 +1,4 @@
-export const userTypeDef = `
+const userTypeDef = `
 extend type Query {
   me: User
 }
@@ -8,7 +8,7 @@ type User {
   id: ID!
 }
 `;
-export const userResolvers = {
+const userResolvers = {
   Query: {
     me: (root, args, { currentUser }) => {
       console.log(currentUser.favoriteGenre);
@@ -16,3 +16,5 @@ export const userResolvers = {
     },
   },
 };
+
+module.exports = { userResolvers, userTypeDef };

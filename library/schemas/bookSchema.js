@@ -1,7 +1,7 @@
 const { GraphQLError } = require("graphql");
 const Book = require("../models/book");
 
-export const bookTypeDef = `
+const bookTypeDef = `
 extend type Query {
   allBooks(author: String, genre: String): [Book!]!
   bookCount: Int!
@@ -15,7 +15,7 @@ type Book {
 }
 `;
 
-export const bookResolvers = {
+const bookResolvers = {
   Book: {
     author: async (root) => {
       const populatedBook = await Book.findOne({ title: root.title }).populate(
@@ -54,3 +54,5 @@ export const bookResolvers = {
     bookCount: () => (Book.collection.length ? Book.collection.length : 0),
   },
 };
+
+module.exports = { bookResolvers, bookTypeDef };

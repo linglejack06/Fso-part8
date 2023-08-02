@@ -2,7 +2,7 @@ const { GraphQLError } = require("graphql");
 const Book = require("../models/book");
 const Author = require("../models/author");
 
-export const authorTypeDef = `
+const authorTypeDef = `
 extend type Query {
   allAuthors: [Author!]!
   authorCount: Int!
@@ -14,7 +14,7 @@ type Author {
   bookCount: Int!
 }
 `;
-export const authorResolvers = {
+const authorResolvers = {
   Author: {
     bookCount: async (root) => {
       console.log(root);
@@ -40,3 +40,5 @@ export const authorResolvers = {
       Author.collection.length ? Author.collection.length : 0,
   },
 };
+
+module.exports = { authorResolvers, authorTypeDef };
