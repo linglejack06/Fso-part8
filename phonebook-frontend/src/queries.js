@@ -17,7 +17,7 @@ export const ALL_PERSONS = gql`
       ...personDetails
     }
   }
-  $[PERSON_DETAILS]
+  ${PERSON_DETAILS}
 `;
 export const FIND_PERSON = gql`
   query findPersonByName($nameToSearch: String!) {
@@ -56,4 +56,13 @@ export const LOGIN = gql`
       value
     }
   }
+`;
+
+export const PERSON_ADDED = gql`
+  subscription {
+    personAdded {
+      ...personDetails
+    }
+  }
+  ${PERSON_DETAILS}
 `;
