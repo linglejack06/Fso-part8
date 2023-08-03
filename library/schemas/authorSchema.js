@@ -1,5 +1,4 @@
 const { GraphQLError } = require("graphql");
-const Book = require("../models/book");
 const Author = require("../models/author");
 
 const authorTypeDef = `
@@ -15,16 +14,7 @@ type Author {
 }
 `;
 const authorResolvers = {
-  Author: {
-    bookCount: async (root) => {
-      console.log(root);
-      const books = await Book.find({}).populate("author");
-      const authorBooks = books.filter(
-        (book) => book.author.name === root.name
-      );
-      return authorBooks.length;
-    },
-  },
+  Author: {},
   Query: {
     allAuthors: async () => {
       try {

@@ -43,7 +43,7 @@ const mutationResolver = {
           const newAuthor = new Author({
             name: args.author,
             born: null,
-            bookCount: 0,
+            bookCount: 1,
           });
           await newAuthor.save();
           book = new Book({
@@ -53,12 +53,14 @@ const mutationResolver = {
             author: newAuthor._id,
           });
         } else {
+          author.bookCount += 1;
           book = new Book({
             title: args.title,
             published: args.published,
             genres: args.genres,
             author: author._id,
           });
+          await author.save();
         }
         await book.save();
         pubsub.publish("BOOK_ADDED", { bookAdded: book });
